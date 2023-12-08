@@ -1,0 +1,416 @@
+﻿Analytics for Season 0
+RED = need to write queries for them.
+Black = queries need to be verified.
+
+
+----------------------Num of Users at level 10/20/30/40----------------------
+Query : 
+SELECT username, MAX(level)
+FROM user_levels
+where updated_at < '2023-11-01 00:00:00.0'
+GROUP BY username 
+HAVING MAX(level) = 10
+
+
+–for verification  :point_up_2:  :
+--select max(level) from user_levels 
+where username ='mo_belal2' --dexter,  pstg_pp_3, younasbim29,  younasbim46
+
+
+----------------------Total num of Users on Prime Dashboard (First Open) ----------------------
+Query : 
+select subquery.xp,subquery.user_id from (
+select sum(amount) as xp,user_id  from xp_points where asset_type='XP' 
+and updated_at < '2023-08-10 00:00:00.0'
+GROUP BY user_id
+                       ) AS subquery where subquery.xp >= 78.43;
+
+
+
+
+SELECT username , max(level)
+FROM user_levels
+GROUP BY username
+having max(level) >= 1
+—----------------------------------------Latest
+
+SELECT ul.user_id, MAX(level) as level_completed
+FROM user_levels ul
+        JOIN summary on ul.user_id = summary.user_id
+        where updated_at < '2023-11-01 00:00:00.0' and total_xp >= 78.43
+GROUP BY ul.user_id
+
+
+----------------------Season 0 Users----------------------
+select subquery.xp,subquery.user_id from (
+select sum(amount) as xp,user_id  from xp_points where asset_type='XP' 
+and updated_at < '2023-09-08 00:00:00.0'
+GROUP BY user_id
+                       ) AS subquery where subquery.xp > 78.43;
+—-----------Latest
+SELECT ul.user_id, MAX(level) as level_completed
+FROM user_levels ul
+        JOIN summary on ul.user_id = summary.user_id
+        where updated_at < '2023-11-01 00:00:00.0' and total_xp > 78.43
+GROUP BY ul.user_id
+
+
+
+
+----------------------Number of vCoins bundles purchased (Virtua Marketplace)----------------------
+Query : Total
+select * from ledger
+where source_from = 'MARKETPLACE_BUY_VCOINS'
+and updated_at < '2023-08-10 00:00:00.0'
+Abc bundle bought for xyz times : 
+select * from ledger
+where source_from = 'MARKETPLACE_BUY_VCOINS'
+and tx_type = 'credit' and reference_id = '6'
+and updated_at < '2023-08-01 00:00:00.0'
+—----GROUP BY—--------
+select reference_id, count(*) from ledger
+where source_from = 'MARKETPLACE_BUY_VCOINS'
+and tx_type = 'credit' --and reference_id = '6'
+and updated_at < '2023-11-26 00:00:00.0'
+group by reference_id
+
+
+
+
+----------------------Num of Premium Upgrades Purchased---------------------- 
+Query : 
+select * from ledger
+where source_from = 'PRIME_DASHBOARD_VCOINS_CONSUME' 
+and tx_type = 'debit'
+and updated_at < '2023-11-03 00:00:00.0'
+
+
+
+
+----------------------Number of Premium Users----------------------
+Query : 
+
+1:
+select * from user_track 
+where updated_at < '2023-11-01 00:00:00.0'
+------------------------------------------------------------------------------------
+----------------------Total Number of Keys Used ----------------------
+Query : 
+select * from ledger
+where source_from = 'PRIME_DASHBOARD_KEY_CONSUME'
+and updated_at < '2023-11-01 00:00:00.0'
+
+
+------------------------------------------------------------------------------------
+
+
+----------------------Total number of XP bundles purchased (e.g. XP Boost Pack 1 was purchased x times, and so on)---------------------- 
+Query :
+select * from ledger
+where source_from = 'PRIME_DASHBOARD_VCOINS_To_XP' 
+and tx_type = 'credit' and reference_id = '4'
+and updated_at < '2023-08-02 00:00:00.0'
+—---GROUP BY—--
+select reference_id, count(*) from ledger
+where source_from = 'PRIME_DASHBOARD_VCOINS_To_XP' 
+and tx_type = 'credit' --and reference_id = '4'
+and updated_at < '2023-11-22 00:00:00.0'
+group by reference_id
+
+
+
+
+----------------------Number of Daily Active Users ----------------------
+Query : 
+
+select player_name from analytics where event_type = 'DAU' and date = '2023-07-26' 
+group by player_name
+
+Aqib-bhai’s  : 
+SELECT date,
+      COUNT(DISTINCT player_id) AS active_users
+FROM analytics
+WHERE game_id = '1edc7f1d-b57f-485d-944e-38247cffebcf'
+ and event_type = 'DAU'
+ and player_id is not null
+GROUP BY date, event_type;
+—-----
+SELECT date,
+COUNT(DISTINCT player_id) AS active_users
+FROM analytics
+where event_type = 'DAU'
+and player_id is not null
+GROUP BY date, event_type;
+—-------------------------------
+SELECT date,
+COUNT(DISTINCT player_id) AS active_users
+FROM analytics
+where event_type = 'DAU'
+and player_id is not null
+GROUP BY date, event_type
+order by date desc
+
+
+
+
+
+
+------------------------------------------------------------------------------------
+----------------------Total number of XP Earned ----------------------
+Query : 
+
+select sum(amount) from ledger where asset_type = 'XP'
+and updated_at < '2023-10-01 00:00:00.0' 
+
+
+
+
+select sum(amount) from ledger where asset_type = 'XP'
+--and source_From not in ('POSTMAN')
+and updated_at < '2023-11-25 00:00:00.0'
+------------------------------------------------------------------------------------
+----------------------XPs from games + quests only : ----------------------
+Query : 
+select sum(amount) from ledger where asset_type = 'XP'
+and source_from in ('GAMING_API', 'VIRTUA_CRONE_QUEST')
+and updated_at < '2023-11-09 00:00:00.0' 
+
+
+
+
+----------------------Total XP from each Game ----------------------
+Query : 
+
+1:
+select source_name, sum(amount) from ledger where asset_type = 'XP'
+and updated_at < '2023-11-02 00:00:00.0' and source_name is not null
+group by source_name
+
+
+----------------------Average session duration of each game----------------------
+Query : 
+
+1:
+SELECT
+    game_name,
+    ROUND((SUM(score) / COUNT(*) / 60), 2) AS avg_score_per_minute
+FROM
+    analytics
+WHERE
+    updated_at < '2023-09-04 00:00:00.0'
+    AND event_type = 'UE'
+    AND player_id IS NOT NULL
+    AND score > 0
+GROUP BY
+    Game_name;
+Published Only—---------
+SELECT
+    a.game_name,
+    ROUND((SUM(a.score) / COUNT(*) / 60), 2) AS avg_score_per_minute
+FROM
+    analytics AS a
+        JOIN games AS g ON a.game_id::uuid = g.uuid
+WHERE
+    a.updated_at < '2023-11-25 00:00:00'
+    AND a.event_type = 'UE'
+    AND a.player_id IS NOT NULL
+    AND a.score > 0
+    AND g.status = 'published' and a.game_name != 'Virtua_Test_Game'-- Uncomment this line if needed
+GROUP BY
+    a.game_name;
+
+
+
+
+—----------------------------------------------------------------------------
+
+
+
+
+----------------------Users at each level ----------------------
+Query : 
+SELECT level_completed, COUNT(*) as user_count
+FROM (
+    SELECT user_id, MAX(level) as level_completed
+    FROM user_levels
+WHERE updated_at < '2023-10-28 00:00:00'
+    GROUP BY user_id
+)   AS max_levels
+GROUP BY level_completed
+order by level_completed
+
+—-------78.43
+SELECT level_completed, COUNT(*) as user_count
+FROM (
+SELECT ul.user_id, MAX(level) as level_completed
+FROM user_levels ul
+        JOIN summary on ul.user_id = summary.user_id
+        where updated_at < '2023-11-05 00:00:00.0' and total_xp > 78.43
+GROUP BY ul.user_id
+) AS max_levels
+GROUP BY level_completed
+order by level_completed
+------------------------------------------------------------------------------------
+----------------------DAU of each game ----------------------
+SELECT date,
+      COUNT(DISTINCT player_id) AS active_users
+FROM analytics
+WHERE game_id = 
+
+
+-- '1edc7f1d-b57f-485d-944e-38247cffebcf' --jetpack
+-- '33cda35c-e83b-47cd-b45e-d4702530f7ea'--Rainbow Arrow
+-- '45af0ef2-06f2-4692-91d7-45866bd6bf2f'--ORB defender
+-- '8a4b7d5b-06b3-45fe-b190-3c086a53957c'--Duo bricks-ball challange
+-- '49d64da7-09f7-4bdb-b50f-265543441ee1' --Doodle universe
+-- 'd250b9c3-deb7-4e7f-a9de-e83534ecef9f'--Aim and defend
+-- 'd56c7b34-d7c8-490f-8eb5-565425ffdc96'--Tower warriors
+-- '38f10f91-1bb3-422e-b671-7ebc1ae4ed40' --Minerbots: The Dig
+
+
+-- 'b34708d7-361f-4218-ad9f-e1b46d293003'        --"Speedy Highway Racer"
+-- 'e5f52294-f445-4065-b27f-6f515aeabfe6'        --"Sky-High Hop"
+-- '7137a390-ce10-4a80-86dc-da2b85fc0b08'        --"Atomic Tank Defence"
+-- '2467dcc9-d312-4cfb-a39b-af033ef220b6'        --"Quack Shot"
+-- '9361876a-5d71-4c51-9cf3-ad4d1e7963c5'        --"Western Cowboy Dash"
+
+
+-- 'f24e9d31-127a-4392-ba1f-aefbfce5b462'        --"Undead Uprising Unleashed"
+-- '6a376893-b725-4e48-b038-6a08059fc7d6'        --"Plumbing Pipeline Puzzler"
+-- 'c3c57391-10b7-4d9b-b368-f673d60b3f8a'        --"Kitty Klash Khaos"
+-- '59787d26-2182-4b99-a831-cf239721960b'        --"Stack Spring Saga"
+-- 'b784bc34-7c3a-4836-bd68-0929795fc615'        --"Traffic Patrol Rampage"
+
+
+-- 'aac4b64b-4c54-4859-a2ef-c3c0fcd1b509'        --"Founder's District"
+ '9c171a68-20e9-41fd-a5d4-150f738d79c6'  --planetary annihilation
+-- 'bcc228a2-8522-422e-b48b-afbc68b2694a' – yes no pranks
+ and event_type = 'DAU'
+ and player_id is not null
+ and date >= '2023-10-01'
+GROUP BY date, event_type
+order by date desc;
+—----short
+SELECT
+    a.game_name, count(distinct(player_id))
+    --ROUND((SUM(a.score) / COUNT(*) / 60), 2) AS avg_score_per_minute
+FROM
+    analytics AS a
+        JOIN games AS g ON a.game_id::uuid = g.uuid
+WHERE
+    date = '2023-11-03'
+        --a.updated_at < '2023-11-04 00:00:00'
+    AND a.event_type = 'DAU'
+    AND a.player_id IS NOT NULL
+    AND a.score > 0
+    AND g.status = 'published' and a.game_name != 'Virtua_Test_Game'-- Uncomment this line if needed
+GROUP BY
+    a.game_name,date;
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------
+----------------------Users in each game ----------------------
+select game_name, count(score) as players from analytics
+where event_type = 'FO'
+and game_name is not null
+group by game_name
+
+
+
+
+----------------------XP Sources----------------------
+select source_from, sum(amount)
+from xp_points
+where  updated_at < '2023-10-27 00:00:00.0'
+group by source_from
+
+
+
+
+—---------------------USERS between levels
+
+SELECT username , max(level)
+FROM user_levels
+where updated_at < '2023-08-25 00:00:00.0'
+GROUP BY username
+having max(level)  between 0 and 10
+
+
+—----------UPDATE game description
+
+UPDATE games
+SET description = 'doodle'
+where uuid = '49d64da7-09f7-4bdb-b50f-265543441ee1'
+
+—----------Site registrations + wallet linkages
+SELECT * FROM
+user_entity ue inner join public.wallet_user_linkage wl on ue.id = wl.user_id
+where ue.created_timestamp >= 1698796800000 
+
+
+select * from user_entity --limit 10
+where created_timestamp >= 1698796800000
+
+
+
+
+
+
+—----------INSERT game conversion_rate
+INSERT INTO public.conversion_rates (id,source_id,source,rate)
+VALUES 
+('24', 'b3fe82ed-5859-47de-98ef-15195d025ffd', 'Boat Blitz Rush', 0.0321),
+('25', 'a47e70dd-2b80-464e-abdd-a64da12abf55', 'Gem Rush Saga', 0.0878),
+('26', 'f64d48f6-d5ee-4255-b31e-d60cea09979f', 'Polygon Pursuit', 0.0313),
+('27', '03be8358-9c6a-4f53-ac62-dcc7ae184de0', 'Space Rescue Mission', 0.2153),
+('28', '9c0b2a55-b7d9-4a46-9eb5-703bea2f6c36', 'Sling Tomb Saga', 0.1798)
+
+
+—----------Season end time updation
+
+update ledger.public.seasons set end_time = '2023-11-20 23:59:59.000000' where id = 1;
+
+
+
+
+
+
+----------------------Retention rate----------------------
+Query : 
+
+
+------------------------------------------------------------------------------------
+
+
+----------------------Average Session duration----------------------
+Query : 
+
+
+
+
+
+
+
+
+
+—----------------Will be provided from google analytics—----------
+----------------------Num of clicks on "Prestige Program" CTA----------------------
+Query : 
+
+
+----------------------Num of clicks on "Buy vCoin" CTA----------------------
+Query : 
+
+
+----------------------Number of clicks on Banners (Explore More CTA on each Banner)----------------------
+Query : 
+----------------------Number of user clicking on "Buy Founder's Key" on Alert Pop-up----------------------
+ Query : 
+----------------------User Location----------------------
+ Query :
